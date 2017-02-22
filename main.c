@@ -17,13 +17,13 @@
 #include "slSPI.h"
 #include "slNRF24.h"
 
-struct MEASURE {
-    int16_t temperature;
-    uint16_t humidity;
-    uint16_t pressure;
-    uint8_t voltage;
-    uint8_t sensorId;
-} BME180measure;
+//struct MEASURE {
+//    int16_t temperature;
+//    uint16_t humidity;
+//    uint16_t pressure;
+//    uint8_t voltage;
+//    uint8_t sensorId;
+//} BME180measure;
 
 #define CHANNELS  126
 int channel[CHANNELS];
@@ -63,7 +63,7 @@ void outputChannels() {
 }
 
 void scanChannels(void) {
-    CE_LOW();//disable rx
+    disable();//disable rx
     for (int j = 0; j < 200; j++) {
         for (int i = 0; i < CHANNELS; i++) {
             // select a new channel
@@ -77,7 +77,7 @@ void scanChannels(void) {
 
             // this is actually the point where the RPD-flag
             // is set, when CE goes low
-            CE_LOW();//disable rx
+            disable();
 
             // read out RPD flag; set to 1 if
             // received power > -64dBm
@@ -90,30 +90,32 @@ void scanChannels(void) {
 }
 
 void printChannels(void) {
-    slUART_WriteStringNl("000000000000000011111111111111112222222222222222333333333333333344444444444444445555555555555555666666666666666677777777777777");
-    slUART_WriteStringNl("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd");
+    // slUART_WriteStringNl("000000000000000011111111111111112222222222222222333333333333333344444444444444445555555555555555666666666666666677777777777777");
+    // slUART_WriteStringNl("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd");
 }
 
 int main(void) {
     slUART_Init();
     slUART_WriteStringNl("Starting Poor Man's Wireless 2.4GHz Scanner ...");
-    // slUART_WriteString("start\n");
     // slUART_WriteString("SPCR: ");
     // slUART_LogBinaryNl(SPCR);
     // slUART_WriteString("SPSR: ");
     // slUART_LogBinaryNl(SPSR);
-    slNRF_Init();
+    //slNRF_Init();
     // slUART_WriteString("SPCR: ");
     // slUART_LogBinaryNl(SPCR);
     // slUART_WriteString("SPSR: ");
     // slUART_LogBinaryNl(SPSR);
 
-    CE_LOW();//disable rx
 
-    //slUART_WriteStringNl("\nPowerUP");
-    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) | 0x02);
-    _delay_us(130);
-    //getRegister(slNRF_CONFIG, 1);
+    slSPI_Init();
+
+    slSPI_SetMode0();
+    slSPI_SetClockDiv2();
+    slSPI_SetMsb();
+    CE_OUTPUT();
+    disable();
+    powerUp();
 
     // switch off Shockburst
     //slUART_WriteStringNl("\nswitch off Shockburst");
@@ -128,10 +130,6 @@ int main(void) {
     //getRegister(slNRF_RF_SETUP, 1);
 
     line = 0;
-
-    for(int n = 0; n < 10; n++){
-        slUART_WriteByte(grey[n]);
-    }
     
     printChannels();
     // if (line++ > 12) {
@@ -143,6 +141,14 @@ int main(void) {
     // output the result
     outputChannels();
     while (1) {
+        if (line++ > 12) {
+            printChannels();
+            line = 0;
+        }
+        // do the scan
+        scanChannels();
+        // output the result
+        outputChannels();
     }
     return 0;
 }

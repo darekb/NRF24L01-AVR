@@ -32,6 +32,10 @@ void slNRF_BitWrite(uint8_t address, uint8_t bit_add, uint8_t val);
 
 uint8_t getRegister(uint8_t r, uint8_t log);
 void setRegister(uint8_t r, uint8_t v);
+void powerUp();
+void powerDown();
+void enable();
+void disable();
 void setRx(void);
 
 #endif //CMAKE_AVR_SLNRF24_H

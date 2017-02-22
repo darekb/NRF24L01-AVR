@@ -21,205 +21,205 @@ uint8_t bitRead(uint8_t dataIn, uint8_t x) {
 
 
 void returnData(uint8_t address) {
-    switch (address) {
-        case 0:
-            slUART_WriteString(" CONFIG REGISTER =");
-            slUART_LogBinaryNl(dataIn[1]);
-            slUART_WriteString("PRIM_RX = ");
-            if (bitRead(dataIn[1], 0))
-                slUART_WriteStringNl("PRX");
-            else
-                slUART_WriteStringNl("PTX");
-
-            slUART_WriteString("PWR_UP = ");
-            if (bitRead(dataIn[1], 1))
-                slUART_WriteStringNl("POWER UP");
-            else
-                slUART_WriteStringNl("POWER DOWN");
-
-            slUART_WriteString("CRCO = ");
-            if (bitRead(dataIn[1], 2))
-                slUART_WriteStringNl("2Bytes");
-            else
-                slUART_WriteStringNl("1Byte");
-
-            slUART_WriteString("EN_CRC = ");
-            if (bitRead(dataIn[1], 3))
-                slUART_WriteStringNl("Enabled");
-            else
-                slUART_WriteStringNl("Disabled");
-
-            slUART_WriteString("MASK_MAX_RT = ");
-            if (bitRead(dataIn[1], 4))
-                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
-            else
-                slUART_WriteStringNl("Reflect MAX_RT as active low interrupt on the IRQ pin");
-
-            slUART_WriteString("MASK_TX_DS = ");
-            if (bitRead(dataIn[1], 5))
-                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
-            else
-                slUART_WriteStringNl("Reflect TX_DS as active low interrupt on the IRQ pin");
-
-            slUART_WriteString("MASK_RX_DR = ");
-            if (bitRead(dataIn[1], 6))
-                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
-            else
-                slUART_WriteStringNl("Reflect RX_DR as active low interrupt on the IRQ pin");
-            break;//0
-        case 1:
-            slUART_WriteString(" EN_AA REGISTER Enhanced ShockBurst =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//1
-        case 2:
-            slUART_WriteString(" EN_RXADDR REGISTER Enabled RX Addresses =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//2
-        case 3:
-            slUART_WriteString(" SETUP_AW REGISTER Setup of Address Widths =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//3
-        case 4:
-            slUART_WriteString(" SETUP_RETR REGISTER Setup of Automatic Retransmission =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//4
-        case 5:
-            slUART_WriteString(" RF_CH REGISTER RF Channel =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//5
-        case 6:
-            slUART_WriteString(" RF_SETUP REGISTER RF Setup Register =");
-            slUART_LogBinaryNl(dataIn[1]);
-            slUART_WriteString("RF Power = ");
-            slUART_LogBinary(bitRead(dataIn[1], 2));
-            slUART_LogBinaryNl(bitRead(dataIn[1], 1));
-            slUART_WriteString("RF_DR_HIGH = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 3));
-            slUART_WriteString("PLL_LOCK = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 4));
-            slUART_WriteString("RF_DR_LOW = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 5));
-            slUART_WriteString("CONT_WAVE = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 7));
-            break;//6
-        case 7:
-            slUART_WriteString(" STATUS REGISTER  =");
-            slUART_LogBinaryNl(dataIn[1]);
-            slUART_WriteString("TX_FULL = ");
-            if (bitRead(dataIn[1], 0))
-                slUART_WriteStringNl("TX FIFO full");
-            else
-                slUART_WriteStringNl("TX FIFO Not full");
-
-            slUART_WriteString("RX_P_NO = ");
-            if (bitRead(dataIn[1], 1) && bitRead(dataIn[1], 2) && bitRead(dataIn[1], 3))
-                slUART_WriteStringNl("RX FIFO Empty");
-            else
-                slUART_LogBinaryNl(bitRead(dataIn[1], 1) + (bitRead(dataIn[1], 2) << 1) + (bitRead(dataIn[1], 2) << 2));
-            slUART_WriteString("MAX_RT Interrupt = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 4));
-            slUART_WriteString("TX_DS Interrupt = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 5));
-            slUART_WriteString("RX_DR Interrupt = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 6));
-            break;//7
-        case 8:
-            slUART_WriteString(" OBSERVE_TX REGISTER Transmit observe register  =");
-            slUART_LogBinaryNl(dataIn[1]);
-            slUART_WriteString("ARC_CNT = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 0) + (bitRead(dataIn[1], 1) << 1) + (bitRead(dataIn[1], 2) << 2) +
-                               (bitRead(dataIn[1], 3) << 3));
-            slUART_WriteString("PLOS_CNT = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 4) + (bitRead(dataIn[1], 5) << 1) + (bitRead(dataIn[1], 6) << 2) +
-                               (bitRead(dataIn[1], 7) << 3));
-            break;//8
-        case 9:
-            slUART_WriteString(" RPD REGISTER Received Power Detector =");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 0));
-            break;//9
-        case 10:
-            slUART_WriteString(" RX_ADDR_P0 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//10
-        case 11:
-            slUART_WriteString(" RX_ADDR_P1 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//11
-        case 12:
-            slUART_WriteString(" RX_ADDR_P2 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//12
-        case 13:
-            slUART_WriteString(" RX_ADDR_P3 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//13
-        case 14:
-            slUART_WriteString(" RX_ADDR_P4 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//14
-        case 15:
-            slUART_WriteString(" RX_ADDR_P5 LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//15
-        case 16:
-            slUART_WriteString(" TX_ADDR LSB =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//16
-        case 17:
-            slUART_WriteString(" RX_PW_P0 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//17
-        case 18:
-            slUART_WriteString(" RX_PW_P1 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//18
-        case 19:
-            slUART_WriteString(" RX_PW_P2 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//19
-        case 20:
-            slUART_WriteString(" RX_PW_P3 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//20
-        case 21:
-            slUART_WriteString(" RX_PW_P4 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//21
-        case 22:
-            slUART_WriteString(" RX_PW_P5 RX payload =");
-            slUART_LogBinaryNl(dataIn[1]);
-            break;//22
-
-        case 23:
-            slUART_WriteString(" FIFO_STATUS Register =");
-            slUART_LogBinaryNl(dataIn[1]);
-            slUART_WriteString("RX_EMPTY = ");
-            if (bitRead(dataIn[1], 0))
-                slUART_WriteStringNl("RX FIFO empty");
-            else
-                slUART_WriteStringNl("Data in RX FIFO");
-
-            slUART_WriteString("RX_EMPTY = ");
-            if (bitRead(dataIn[1], 1))
-                slUART_WriteStringNl("RX FIFO full");
-            else
-                slUART_WriteStringNl("Available locations in RX FIFO");
-
-            slUART_WriteString("TX_EMPTY = ");
-            if (bitRead(dataIn[1], 4))
-                slUART_WriteStringNl("TX FIFO empty");
-            else
-                slUART_WriteStringNl("Data in TX FIFO");
-
-            slUART_WriteString("TX_FULL = ");
-            if (bitRead(dataIn[1], 5))
-                slUART_WriteStringNl("TX FIFO full");
-            else
-                slUART_WriteStringNl("Available locations in TX FIFO");
-            slUART_WriteString("TX_REUSE = ");
-            slUART_LogBinaryNl(bitRead(dataIn[1], 6));
-            break;//23
-    }//switch
+//    switch (address) {
+//        case 0:
+//            slUART_WriteString(" CONFIG REGISTER =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            slUART_WriteString("PRIM_RX = ");
+//            if (bitRead(dataIn[1], 0))
+//                slUART_WriteStringNl("PRX");
+//            else
+//                slUART_WriteStringNl("PTX");
+//
+//            slUART_WriteString("PWR_UP = ");
+//            if (bitRead(dataIn[1], 1))
+//                slUART_WriteStringNl("POWER UP");
+//            else
+//                slUART_WriteStringNl("POWER DOWN");
+//
+//            slUART_WriteString("CRCO = ");
+//            if (bitRead(dataIn[1], 2))
+//                slUART_WriteStringNl("2Bytes");
+//            else
+//                slUART_WriteStringNl("1Byte");
+//
+//            slUART_WriteString("EN_CRC = ");
+//            if (bitRead(dataIn[1], 3))
+//                slUART_WriteStringNl("Enabled");
+//            else
+//                slUART_WriteStringNl("Disabled");
+//
+//            slUART_WriteString("MASK_MAX_RT = ");
+//            if (bitRead(dataIn[1], 4))
+//                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
+//            else
+//                slUART_WriteStringNl("Reflect MAX_RT as active low interrupt on the IRQ pin");
+//
+//            slUART_WriteString("MASK_TX_DS = ");
+//            if (bitRead(dataIn[1], 5))
+//                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
+//            else
+//                slUART_WriteStringNl("Reflect TX_DS as active low interrupt on the IRQ pin");
+//
+//            slUART_WriteString("MASK_RX_DR = ");
+//            if (bitRead(dataIn[1], 6))
+//                slUART_WriteStringNl("Interrupt not reflected on the IRQ pin");
+//            else
+//                slUART_WriteStringNl("Reflect RX_DR as active low interrupt on the IRQ pin");
+//            break;//0
+//        case 1:
+//            slUART_WriteString(" EN_AA REGISTER Enhanced ShockBurst =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//1
+//        case 2:
+//            slUART_WriteString(" EN_RXADDR REGISTER Enabled RX Addresses =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//2
+//        case 3:
+//            slUART_WriteString(" SETUP_AW REGISTER Setup of Address Widths =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//3
+//        case 4:
+//            slUART_WriteString(" SETUP_RETR REGISTER Setup of Automatic Retransmission =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//4
+//        case 5:
+//            slUART_WriteString(" RF_CH REGISTER RF Channel =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//5
+//        case 6:
+//            slUART_WriteString(" RF_SETUP REGISTER RF Setup Register =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            slUART_WriteString("RF Power = ");
+//            slUART_LogBinary(bitRead(dataIn[1], 2));
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 1));
+//            slUART_WriteString("RF_DR_HIGH = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 3));
+//            slUART_WriteString("PLL_LOCK = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 4));
+//            slUART_WriteString("RF_DR_LOW = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 5));
+//            slUART_WriteString("CONT_WAVE = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 7));
+//            break;//6
+//        case 7:
+//            slUART_WriteString(" STATUS REGISTER  =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            slUART_WriteString("TX_FULL = ");
+//            if (bitRead(dataIn[1], 0))
+//                slUART_WriteStringNl("TX FIFO full");
+//            else
+//                slUART_WriteStringNl("TX FIFO Not full");
+//
+//            slUART_WriteString("RX_P_NO = ");
+//            if (bitRead(dataIn[1], 1) && bitRead(dataIn[1], 2) && bitRead(dataIn[1], 3))
+//                slUART_WriteStringNl("RX FIFO Empty");
+//            else
+//                slUART_LogBinaryNl(bitRead(dataIn[1], 1) + (bitRead(dataIn[1], 2) << 1) + (bitRead(dataIn[1], 2) << 2));
+//            slUART_WriteString("MAX_RT Interrupt = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 4));
+//            slUART_WriteString("TX_DS Interrupt = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 5));
+//            slUART_WriteString("RX_DR Interrupt = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 6));
+//            break;//7
+//        case 8:
+//            slUART_WriteString(" OBSERVE_TX REGISTER Transmit observe register  =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            slUART_WriteString("ARC_CNT = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 0) + (bitRead(dataIn[1], 1) << 1) + (bitRead(dataIn[1], 2) << 2) +
+//                               (bitRead(dataIn[1], 3) << 3));
+//            slUART_WriteString("PLOS_CNT = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 4) + (bitRead(dataIn[1], 5) << 1) + (bitRead(dataIn[1], 6) << 2) +
+//                               (bitRead(dataIn[1], 7) << 3));
+//            break;//8
+//        case 9:
+//            slUART_WriteString(" RPD REGISTER Received Power Detector =");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 0));
+//            break;//9
+//        case 10:
+//            slUART_WriteString(" RX_ADDR_P0 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//10
+//        case 11:
+//            slUART_WriteString(" RX_ADDR_P1 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//11
+//        case 12:
+//            slUART_WriteString(" RX_ADDR_P2 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//12
+//        case 13:
+//            slUART_WriteString(" RX_ADDR_P3 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//13
+//        case 14:
+//            slUART_WriteString(" RX_ADDR_P4 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//14
+//        case 15:
+//            slUART_WriteString(" RX_ADDR_P5 LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//15
+//        case 16:
+//            slUART_WriteString(" TX_ADDR LSB =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//16
+//        case 17:
+//            slUART_WriteString(" RX_PW_P0 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//17
+//        case 18:
+//            slUART_WriteString(" RX_PW_P1 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//18
+//        case 19:
+//            slUART_WriteString(" RX_PW_P2 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//19
+//        case 20:
+//            slUART_WriteString(" RX_PW_P3 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//20
+//        case 21:
+//            slUART_WriteString(" RX_PW_P4 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//21
+//        case 22:
+//            slUART_WriteString(" RX_PW_P5 RX payload =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            break;//22
+//
+//        case 23:
+//            slUART_WriteString(" FIFO_STATUS Register =");
+//            slUART_LogBinaryNl(dataIn[1]);
+//            slUART_WriteString("RX_EMPTY = ");
+//            if (bitRead(dataIn[1], 0))
+//                slUART_WriteStringNl("RX FIFO empty");
+//            else
+//                slUART_WriteStringNl("Data in RX FIFO");
+//
+//            slUART_WriteString("RX_EMPTY = ");
+//            if (bitRead(dataIn[1], 1))
+//                slUART_WriteStringNl("RX FIFO full");
+//            else
+//                slUART_WriteStringNl("Available locations in RX FIFO");
+//
+//            slUART_WriteString("TX_EMPTY = ");
+//            if (bitRead(dataIn[1], 4))
+//                slUART_WriteStringNl("TX FIFO empty");
+//            else
+//                slUART_WriteStringNl("Data in TX FIFO");
+//
+//            slUART_WriteString("TX_FULL = ");
+//            if (bitRead(dataIn[1], 5))
+//                slUART_WriteStringNl("TX FIFO full");
+//            else
+//                slUART_WriteStringNl("Available locations in TX FIFO");
+//            slUART_WriteString("TX_REUSE = ");
+//            slUART_LogBinaryNl(bitRead(dataIn[1], 6));
+//            break;//23
+//    }//switch
 }
 
 void slNRF_Init() {
@@ -320,6 +320,28 @@ void setRegister(uint8_t r, uint8_t v) {
 
 void setRx(void) {
     setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) | 0x01);
-    CE_HIGH();
+    enable();
     _delay_us(130);
+}
+
+void powerUp(){
+    //slUART_WriteStringNl("\nPowerUP");
+    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) | 0x02);
+    _delay_us(130);
+    //getRegister(slNRF_CONFIG, 1);
+}
+
+
+void powerDown(){
+    //slUART_WriteStringNl("\nPowerUP");
+    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) &~0x02);
+    //getRegister(slNRF_CONFIG, 1);
+}
+
+void enable(){
+    CE_HIGH();
+}
+
+void disable(){
+    CE_LOW();
 }

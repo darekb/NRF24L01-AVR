@@ -14,15 +14,15 @@ void slSPI_Init() {
 
     //enable spi interface
     slSPI_Enable();
-
-    //Mode 0 Rising edge of data, keep clock low
-    slSPI_SetMode0();
-
-    //Run the data in at 16MHz/2 - 8MHz
-    slSPI_SetClockDiv2();
-
-    //SPI Most Significant Bit First
-    slSPI_SetMsb();
+//
+//    //Mode 0 Rising edge of data, keep clock low
+//    slSPI_SetMode0();
+//
+//    //Run the data in at 16MHz/2 - 8MHz
+//    slSPI_SetClockDiv2();
+//
+//    //SPI Most Significant Bit First
+//    slSPI_SetMsb();
 }
 
 uint8_t slSPI_TransferByte(char data) {
