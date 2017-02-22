@@ -9,8 +9,11 @@ void slSPI_Init() {
     //Set MOSI and SCK output, all others input
     DDR_SPI |= (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS);
 
-    //SPI Most Significant Bit First
-    slSPI_SetMsb();
+    //set AVR as master
+    slSPI_SetMaster();
+
+    //enable spi interface
+    slSPI_Enable();
 
     //Mode 0 Rising edge of data, keep clock low
     slSPI_SetMode0();
@@ -18,11 +21,8 @@ void slSPI_Init() {
     //Run the data in at 16MHz/2 - 8MHz
     slSPI_SetClockDiv2();
 
-    //set AVR as master
-    slSPI_SetMaster();
-
-    //enable spi interface
-    slSPI_Enable();
+    //SPI Most Significant Bit First
+    slSPI_SetMsb();
 }
 
 uint8_t slSPI_TransferByte(char data) {

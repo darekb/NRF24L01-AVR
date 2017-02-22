@@ -46,7 +46,7 @@ void slUART_WriteByte(char data) {
 }
 
 void slUART_WriteString(const char myString[]) {
-    uint8_t i = 0;
+    uint16_t i = 0;
     while (myString[i]) {
         slUART_WriteByte(myString[i]);
         i++;
@@ -54,7 +54,7 @@ void slUART_WriteString(const char myString[]) {
 }
 void slUART_WriteStringNl(const char myString[]) {
     slUART_WriteString(myString);
-    slUART_WriteString("\n");
+    slUART_WriteByte('\n');
 }
 
 void slUART_LogBinary(uint8_t dataIn) {
@@ -64,7 +64,7 @@ void slUART_LogBinary(uint8_t dataIn) {
 }
 void slUART_LogBinaryNl(uint8_t dataIn) {
     slUART_LogBinary(dataIn);
-    slUART_WriteString("\n");
+    slUART_WriteByte('\n');
 }
 
 void slUART_LogDec(uint8_t dataIn) {
@@ -74,7 +74,7 @@ void slUART_LogDec(uint8_t dataIn) {
 }
 void slUART_LogDecNl(uint8_t dataIn) {
     slUART_LogDec(dataIn);
-    slUART_WriteString("\n");
+    slUART_WriteByte('\n');
 }
 
 void slUART_LogHex(uint8_t dataIn) {
@@ -84,5 +84,5 @@ void slUART_LogHex(uint8_t dataIn) {
 }
 void slUART_LogHexNl(uint8_t dataIn) {
     slUART_LogHex(dataIn);
-    slUART_WriteString("\n");
+    slUART_WriteByte('\n');
 }
