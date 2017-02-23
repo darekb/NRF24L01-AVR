@@ -17,30 +17,22 @@
 #include "slSPI.h"
 #include "slNRF24.h"
 
-//struct MEASURE {
-//    int16_t temperature;
-//    uint16_t humidity;
-//    uint16_t pressure;
-//    uint8_t voltage;
-//    uint8_t sensorId;
-//} BME180measure;
 
 #define CHANNELS  126
-int channel[CHANNELS];
-int line;
+uint8_t channel[CHANNELS];
+uint8_t line;
 char grey[] = " .:-=+*aRW";
 
-
 void outputChannels() {
-    int norm = 0;
+    uint8_t norm = 0;
 
     // find the maximal count in channel array
-    for (int i = 0; i < CHANNELS; i++)
+    for (uint8_t i = 0; i < CHANNELS; i++)
         if (channel[i] > norm) norm = channel[i];
 
     // now output the data
     slUART_WriteByte('|');
-    for (int i = 0; i < CHANNELS; i++) {
+    for (uint8_t i = 0; i < CHANNELS; i++) {
         int pos;
 
         // calculate grey value position
@@ -64,8 +56,8 @@ void outputChannels() {
 
 void scanChannels(void) {
     disable();//disable rx
-    for (int j = 0; j < 200; j++) {
-        for (int i = 0; i < CHANNELS; i++) {
+    for (uint8_t j = 0; j < 200; j++) {
+        for (uint8_t i = 0; i < CHANNELS; i++) {
             // select a new channel
             setRegister(slNRF_RF_CH, (128 * i) / CHANNELS);
 
@@ -94,57 +86,79 @@ void printChannels(void) {
     // slUART_WriteStringNl("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd");
 }
 
+struct MEASURE {
+   int16_t temperature;
+   uint16_t humidity;
+   int16_t pressure;
+   uint8_t voltage;
+   uint8_t sensorId;
+};
+
+void fillBuferFromMEASURE (const struct MEASURE structure, uint8_t *buffer) {
+    memcpy(buffer, &structure, sizeof(struct MEASURE));
+}
+struct MEASURE returnMEASUREFromBuffer (uint8_t *buffer) {
+    struct MEASURE  tmp;
+    memcpy(&tmp, buffer, 8*sizeof(uint8_t));
+    return tmp;
+}
+
 int main(void) {
-    slUART_Init();
+    slUART_SimpleTransmitInit();
     slUART_WriteStringNl("Starting Poor Man's Wireless 2.4GHz Scanner ...");
+    struct MEASURE  BME180measure = {856,6818,-1235,33,11};
+    struct MEASURE  t2 = {0,0,0,0,11};
+    uint8_t buffer[8];
+    uint8_t buff[8];
+    fillBuferFromMEASURE(BME180measure, buffer);
+    slUART_WriteString("\r\n***************************\r\n");
+    _delay_ms(2000);
+    slUART_WriteBuffer(buff, 8);
+    _delay_ms(2000);
+    slUART_WriteString("\r\n***************************\r\n");
+    BME180measure.temperature = 123;
+    BME180measure.humidity = 4567;
+    BME180measure.pressure = 245;
+    t2 = returnMEASUREFromBuffer(buffer);
+    slUART_LogDecNl(t2.temperature);
+    slUART_LogDecNl(BME180measure.temperature);
+    slUART_LogDecNl(t2.humidity);
+    slUART_LogDecNl(BME180measure.humidity);
+    slUART_LogDecNl(t2.pressure);
+    slUART_LogDecNl(BME180measure.pressure);
+    return 0;
+
+
+
     // slUART_WriteString("SPCR: ");
     // slUART_LogBinaryNl(SPCR);
     // slUART_WriteString("SPSR: ");
     // slUART_LogBinaryNl(SPSR);
-    //slNRF_Init();
-    // slUART_WriteString("SPCR: ");
-    // slUART_LogBinaryNl(SPCR);
-    // slUART_WriteString("SPSR: ");
-    // slUART_LogBinaryNl(SPSR);
+    slNRF_Init();
+    slUART_WriteString("SPCR: ");
+    slUART_LogBinaryNl(SPCR);
+    slUART_WriteString("SPSR: ");
+    slUART_LogBinaryNl(SPSR);
 
-
-    slSPI_Init();
-
-    slSPI_SetMode0();
-    slSPI_SetClockDiv2();
-    slSPI_SetMsb();
-    CE_OUTPUT();
     disable();
+    powerUp();
+    powerDown();
     powerUp();
 
     // switch off Shockburst
-    //slUART_WriteStringNl("\nswitch off Shockburst");
+    slUART_WriteStringNl("\r\nswitch off Shockburst");
     setRegister(slNRF_EN_AA, 0x0);
-    //getRegister(slNRF_EN_AA, 1);
+    getRegister(slNRF_EN_AA, 1);
 
 
     // make sure RF-section is set properly 
     // - just write default value... 
-    //slUART_WriteStringNl("\nRF-section write default value");
+    slUART_WriteStringNl("\r\nRF-section write default value");
     setRegister(slNRF_RF_SETUP, 0x0F);
-    //getRegister(slNRF_RF_SETUP, 1);
+    getRegister(slNRF_RF_SETUP, 1);
 
-    line = 0;
-    
-    printChannels();
-    // if (line++ > 12) {
-    //     printChannels();
-    //     line = 0;
-    // }
-    // do the scan
-    scanChannels();
-    // output the result
-    outputChannels();
+
     while (1) {
-        if (line++ > 12) {
-            printChannels();
-            line = 0;
-        }
         // do the scan
         scanChannels();
         // output the result

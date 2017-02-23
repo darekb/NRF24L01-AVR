@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <stdlib.h>
+#include <string.h>
 #include "slUart.h"
 
 void slUART_SimpleTransmitInit() {
@@ -54,35 +55,45 @@ void slUART_WriteString(const char myString[]) {
 }
 void slUART_WriteStringNl(const char myString[]) {
     slUART_WriteString(myString);
-    slUART_WriteByte('\n');
+    slUART_WriteString("\r\n");
+}
+void slUART_WriteBuffer(const uint8_t myData[], uint8_t length) {
+		uint8_t buff[8];
+    memcpy(&buff, myData, 8*sizeof(uint8_t));
+    for (uint8_t i = 0; i < length;  i++) {
+        while (!(UCSRA & (1 << UDRE))) {
+    		}
+    		UDR = buff[i];
+    }
+    slUART_WriteString("\r\n");
 }
 
-void slUART_LogBinary(uint8_t dataIn) {
+void slUART_LogBinary(uint16_t dataIn) {
     char buff[30];
     itoa(dataIn, buff, 2);
     slUART_WriteString(buff);
 }
-void slUART_LogBinaryNl(uint8_t dataIn) {
+void slUART_LogBinaryNl(uint16_t dataIn) {
     slUART_LogBinary(dataIn);
-    slUART_WriteByte('\n');
+    slUART_WriteString("\r\n");
 }
 
-void slUART_LogDec(uint8_t dataIn) {
+void slUART_LogDec(uint16_t dataIn) {
     char buff[30];
     itoa(dataIn, buff, 10);
     slUART_WriteString(buff);
 }
-void slUART_LogDecNl(uint8_t dataIn) {
+void slUART_LogDecNl(uint16_t dataIn) {
     slUART_LogDec(dataIn);
-    slUART_WriteByte('\n');
+    slUART_WriteString("\r\n");
 }
 
-void slUART_LogHex(uint8_t dataIn) {
+void slUART_LogHex(uint16_t dataIn) {
     char buff[30];
     itoa(dataIn, buff, 16);
     slUART_WriteString(buff);
 }
-void slUART_LogHexNl(uint8_t dataIn) {
+void slUART_LogHexNl(uint16_t dataIn) {
     slUART_LogHex(dataIn);
-    slUART_WriteByte('\n');
+    slUART_WriteString("\r\n");
 }
