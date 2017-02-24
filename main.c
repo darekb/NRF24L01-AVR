@@ -93,42 +93,9 @@ struct MEASURE {
    uint8_t voltage;
    uint8_t sensorId;
 };
-
-void fillBuferFromMEASURE (const struct MEASURE structure, uint8_t *buffer) {
-    memcpy(buffer, &structure, sizeof(struct MEASURE));
-}
-struct MEASURE returnMEASUREFromBuffer (uint8_t *buffer) {
-    struct MEASURE  tmp;
-    memcpy(&tmp, buffer, 8*sizeof(uint8_t));
-    return tmp;
-}
-
 int main(void) {
     slUART_SimpleTransmitInit();
     slUART_WriteStringNl("Starting Poor Man's Wireless 2.4GHz Scanner ...");
-    struct MEASURE  BME180measure = {856,6818,-1235,33,11};
-    struct MEASURE  t2 = {0,0,0,0,11};
-    uint8_t buffer[8];
-    uint8_t buff[8];
-    fillBuferFromMEASURE(BME180measure, buffer);
-    slUART_WriteString("\r\n***************************\r\n");
-    _delay_ms(2000);
-    slUART_WriteBuffer(buff, 8);
-    _delay_ms(2000);
-    slUART_WriteString("\r\n***************************\r\n");
-    BME180measure.temperature = 123;
-    BME180measure.humidity = 4567;
-    BME180measure.pressure = 245;
-    t2 = returnMEASUREFromBuffer(buffer);
-    slUART_LogDecNl(t2.temperature);
-    slUART_LogDecNl(BME180measure.temperature);
-    slUART_LogDecNl(t2.humidity);
-    slUART_LogDecNl(BME180measure.humidity);
-    slUART_LogDecNl(t2.pressure);
-    slUART_LogDecNl(BME180measure.pressure);
-    return 0;
-
-
 
     // slUART_WriteString("SPCR: ");
     // slUART_LogBinaryNl(SPCR);
@@ -140,7 +107,7 @@ int main(void) {
     slUART_WriteString("SPSR: ");
     slUART_LogBinaryNl(SPSR);
 
-    disable();
+    //disable();
     powerUp();
     powerDown();
     powerUp();
@@ -160,9 +127,9 @@ int main(void) {
 
     while (1) {
         // do the scan
-        scanChannels();
+        //scanChannels();
         // output the result
-        outputChannels();
+        //outputChannels();
     }
     return 0;
 }

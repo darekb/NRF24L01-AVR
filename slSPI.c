@@ -3,7 +3,7 @@
 //
 #include <avr/io.h>
 #include "slSPI.h"
-//#include "slUart.h"
+#include "slUart.h"
 
 void slSPI_Init() {
     //Set MOSI and SCK output, all others input
@@ -15,12 +15,9 @@ void slSPI_Init() {
     //enable spi interface
     slSPI_Enable();
 
-    DDR_SPI |= (1 << DD_MOSI) | (1 << DD_SCK);
-//    DDR_SPI &= ~(1 << DD_MISO);//input
+    DDR_SPI |= (1 << DD_MOSI) | (1 << DD_SCK);//sck mosi output
+    DDR_SPI &= ~(1 << DD_MISO);//miso input
 //    PORTB |= (1 << DD_MISO);//pullup
-
-    //SPI Most Significant Bit First
-    slSPI_SetMsb();
 
     //Mode 0 Rising edge of data, keep clock low
     slSPI_SetMode0();
@@ -28,14 +25,16 @@ void slSPI_Init() {
     //Run the data in at 16MHz/2 - 8MHz
     slSPI_SetClockDiv2();
 
+    //SPI Most Significant Bit First
+    slSPI_SetMsb();
 }
 
 uint8_t slSPI_TransferInt(uint8_t data) {
     /* Start transmission */
-//    slUART_WriteString("slSPI_TransferInt data: ");
-//    slUART_LogBinary(data);
+   slUART_WriteString("slSPI_TransferInt data: ");
+   slUART_LogBinaryNl(data);
     SPDR = data;
-    asm volatile("nop");
+    //asm volatile("nop");
     /* Wait for transmission complete */
     while (!(SPSR & _BV(SPIF))) ;
     return SPDR;

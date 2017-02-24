@@ -1,0 +1,81 @@
+Starting Poor Man's Wireless 2.4GHz Scanner ...
+after init SPI
+
+SPCR: 1010000
+SPSR: 1
+
+PowerUP
+setRegister: 
+register: 0
+value: 1010
+
+************************
+getRegister: 
+c: 1000
+ CONFIG REGISTER =1000
+PRIM_RX = PTX
+PWR_UP = POWER DOWN
+CRCO = 1Byte
+EN_CRC = Enabled
+MASK_MAX_RT = Reflect MAX_RT as active low interrupt on the IRQ pin
+MASK_TX_DS = Reflect TX_DS as active low interrupt on the IRQ pin
+MASK_RX_DR = Reflect RX_DR as active low interrupt on the IRQ pin
+
+PowerDown
+setRegister: 
+register: 0
+value: 1000
+
+************************
+getRegister: 
+c: 1000
+ CONFIG REGISTER =1000
+PRIM_RX = PTX
+PWR_UP = POWER DOWN
+CRCO = 1Byte
+EN_CRC = Enabled
+MASK_MAX_RT = Reflect MAX_RT as active low interrupt on the IRQ pin
+MASK_TX_DS = Reflect TX_DS as active low interrupt on the IRQ pin
+MASK_RX_DR = Reflect RX_DR as active low interrupt on the IRQ pin
+
+PowerUP
+setRegister: 
+register: 0
+value: 1010
+
+************************
+getRegister: 
+c: 1000
+ CONFIG REGISTER =1000
+PRIM_RX = PTX
+PWR_UP = POWER DOWN
+CRCO = 1Byte
+EN_CRC = Enabled
+MASK_MAX_RT = Reflect MAX_RT as active low interrupt on the IRQ pin
+MASK_TX_DS = Reflect TX_DS as active low interrupt on the IRQ pin
+MASK_RX_DR = Reflect RX_DR as active low interrupt on the IRQ pin
+
+switch off Shockburst
+setRegister: 
+register: 1
+value: 0
+
+************************
+getRegister: 
+c: 1000
+ EN_AA REGISTER Enhanced ShockBurst =1000
+
+RF-section write default value
+setRegister: 
+register: 110
+value: 1111
+
+************************
+getRegister: 
+c: 1000
+ RF_SETUP REGISTER RF Setup Register =1000
+RF Power = 00
+RF_DR_HIGH = 1
+PLL_LOCK = 0
+RF_DR_LOW = 0
+CONT_WAVE = 0
