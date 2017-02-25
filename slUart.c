@@ -61,9 +61,8 @@ void slUART_WriteBuffer(const uint8_t myData[], uint8_t length) {
 		uint8_t buff[8];
     memcpy(&buff, myData, 8*sizeof(uint8_t));
     for (uint8_t i = 0; i < length;  i++) {
-        while (!(UCSRA & (1 << UDRE))) {
-    		}
-    		UDR = buff[i];
+    	slUART_LogHex((uint16_t)buff[i]);
+    	slUART_WriteByte(' ');
     }
     slUART_WriteString("\r\n");
 }

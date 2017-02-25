@@ -90,39 +90,44 @@ void printChannels(void) {
 int main(void) {
     slUART_SimpleTransmitInit();
     slUART_WriteStringNl("Starting Poor Man's Wireless 2.4GHz Scanner ...");
-    testBME180Measure();
+    //testBME180Measure();
+    //return 0;
     // slUART_WriteString("SPCR: ");
     // slUART_LogBinaryNl(SPCR);
     // slUART_WriteString("SPSR: ");
     // slUART_LogBinaryNl(SPSR);
     slNRF_Init();
-    slUART_WriteString("SPCR: ");
-    slUART_LogBinaryNl(SPCR);
-    slUART_WriteString("SPSR: ");
-    slUART_LogBinaryNl(SPSR);
+    // slUART_WriteString("SPCR: ");
+    // slUART_LogBinaryNl(SPCR);
+    // slUART_WriteString("SPSR: ");
+    // slUART_LogBinaryNl(SPSR);
 
     disable();
-    powerUp();
-    powerDown();
-    powerUp();
-
-    // switch off Shockburst
-    slUART_WriteStringNl("\r\nswitch off Shockburst");
-    setRegister(slNRF_EN_AA, 0x0);
-    getRegister(slNRF_EN_AA, 1);
+    uint8_t data;
+    //data = getRegister(CONFIG,0);
+    //data = _BV(EN_CRC) | _BV(CRCO) | _BV(PWR_UP) | _BV(PRIM_RX);
+    data = getRegister(CONFIG,0) | (1<<PWR_UP);//_BV(PWR_UP);
+    setRegister(CONFIG, data);
 
 
-    // make sure RF-section is set properly 
-    // - just write default value... 
-    slUART_WriteStringNl("\r\nRF-section write default value");
-    setRegister(slNRF_RF_SETUP, 0x0F);
-    getRegister(slNRF_RF_SETUP, 1);
+    data = getRegister(slNRF_EN_AA,0);
+    data = data | 0;
+    setRegister(slNRF_EN_AA, data);
 
+
+    data = getRegister(slNRF_RF_SETUP,0);
+    data = data | 0x0F;
+    setRegister(slNRF_RF_SETUP, data);
+    
+
+    // getRegister(CONFIG, 1);
+    // getRegister(slNRF_EN_AA, 1);
+    // getRegister(slNRF_RF_SETUP, 1);
 
     while (1) {
         // do the scan
         scanChannels();
-        // output the result
+        // // output the result
         outputChannels();
     }
     return 0;

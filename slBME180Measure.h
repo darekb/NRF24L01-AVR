@@ -9,7 +9,7 @@
 struct MEASURE {
    int16_t temperature;
    uint16_t humidity;
-   int16_t pressure;
+   int16_t pressure;//(pressure - 1000)*100
    uint8_t voltage;
    uint8_t sensorId;
 };

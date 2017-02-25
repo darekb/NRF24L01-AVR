@@ -4,6 +4,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdlib.h>
 #include "slNRF24.h"
 #include "slSPI.h"
 #include "slUart.h"
@@ -290,15 +291,23 @@ void slNRF_BitWrite(uint8_t address, uint8_t bit_add,
 
 uint8_t getRegister(uint8_t r, uint8_t log) {
     uint8_t c;
+    //_delay_us(10);
     CSN_LOW();
-    slSPI_TransferInt(r & 0x1F);
+    //_delay_us(10);
+    c = slSPI_TransferInt(R_REGISTER | r);
+    //_delay_us(10);
     c = slSPI_TransferInt(0);
+    //_delay_us(10);
     CSN_HIGH();
     if (log == 1) {
         slUART_WriteString("\r\n************************\r\n");
         slUART_WriteString("getRegister: \r\n");
+        slUART_WriteString("register: ");
+        slUART_LogDecNl(r);
+        slUART_WriteString("register2: ");
+        slUART_LogDecNl(R_REGISTER | r);
         slUART_WriteString("c: ");
-        slUART_LogBinaryNl(c);
+        slUART_LogDecNl(c);
         dataIn[1] = c;
         returnData(r);
     }
@@ -306,20 +315,26 @@ uint8_t getRegister(uint8_t r, uint8_t log) {
 }
 
 void setRegister(uint8_t r, uint8_t v) {
-//    uint8_t c1, c2;
-//    slUART_WriteString("setRegister: \r\n");
-//    slUART_WriteString("register: ");
-//    slUART_LogBinaryNl(r);
-//    slUART_WriteString("value: ");
-//    slUART_LogBinaryNl(v);
+   // uint8_t c1, c2;
+   // slUART_WriteString("setRegister: \r\n");
+   // slUART_WriteString("register: ");
+   // slUART_LogDecNl(r);
+   // slUART_WriteString("register2: ");
+   // slUART_LogDecNl(W_REGISTER | r);
+   // slUART_WriteString("value: ");
+   // slUART_LogDecNl(v);
+    //_delay_us(10);
     CSN_LOW();
-    slSPI_TransferInt((r & 0x1F) | 0x20);
+    //_delay_us(10);
+    slSPI_TransferInt(W_REGISTER | r);
+    //_delay_us(10);
     slSPI_TransferInt(v);
+    //_delay_us(10);
     CSN_HIGH();
-//    slUART_WriteString("c1: ");
-//    slUART_LogBinaryNl(c1);
-//    slUART_WriteString("c2: ");
-//    slUART_LogBinaryNl(c2);
+   // slUART_WriteString("c1: ");
+   // slUART_LogDecNl(c1);
+   // slUART_WriteString("c2: ");
+   // slUART_LogDecNl(c2);
 }
 
 void setRx(void) {
@@ -332,9 +347,9 @@ void setRx(void) {
 
 void powerUp(){
     slUART_WriteStringNl("\r\nPowerUP");
-    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) | 0x02);
+    setRegister(CONFIG, (1<<PWR_UP));
     _delay_us(130);
-    getRegister(slNRF_CONFIG, 1);
+    getRegister(CONFIG, 1);
 }
 
 
