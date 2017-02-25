@@ -31,8 +31,8 @@ void slSPI_Init() {
 
 uint8_t slSPI_TransferInt(uint8_t data) {
     /* Start transmission */
-   slUART_WriteString("slSPI_TransferInt data: ");
-   slUART_LogBinaryNl(data);
+    slUART_WriteString("slSPI_TransferInt data: ");
+    slUART_LogBinaryNl(data);
     SPDR = data;
     //asm volatile("nop");
     /* Wait for transmission complete */

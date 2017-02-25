@@ -102,27 +102,23 @@ int main(void) {
     // slUART_WriteString("SPSR: ");
     // slUART_LogBinaryNl(SPSR);
     slNRF_Init();
-    slUART_WriteString("SPCR: ");
-    slUART_LogBinaryNl(SPCR);
-    slUART_WriteString("SPSR: ");
-    slUART_LogBinaryNl(SPSR);
 
-    //disable();
-    powerUp();
-    powerDown();
-    powerUp();
+    // //disable();
+    // powerUp();
+    // powerDown();
+    // powerUp();
 
-    // switch off Shockburst
-    slUART_WriteStringNl("\r\nswitch off Shockburst");
-    setRegister(slNRF_EN_AA, 0x0);
-    getRegister(slNRF_EN_AA, 1);
+    // // switch off Shockburst
+    // slUART_WriteStringNl("\r\nswitch off Shockburst");
+    // setRegister(slNRF_EN_AA, 0x0);
+    // getRegister(slNRF_EN_AA, 1);
 
 
-    // make sure RF-section is set properly 
-    // - just write default value... 
-    slUART_WriteStringNl("\r\nRF-section write default value");
-    setRegister(slNRF_RF_SETUP, 0x0F);
-    getRegister(slNRF_RF_SETUP, 1);
+    // // make sure RF-section is set properly 
+    // // - just write default value... 
+    // slUART_WriteStringNl("\r\nRF-section write default value");
+    // setRegister(slNRF_RF_SETUP, 0x0F);
+    // getRegister(slNRF_RF_SETUP, 1);
 
 
     while (1) {
