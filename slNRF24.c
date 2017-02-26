@@ -5,12 +5,30 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdlib.h>
+#include <avr/pgmspace.h>
 #include "slNRF24.h"
 #include "slSPI.h"
 #include "slUart.h"
 
-uint8_t dataIn[5];
+#define ADDRESS_WIDTH 5
+uint8_t dataIn[10];
+uint8_t addressWidth = ADDRESS_WIDTH;
+uint8_t txDelay = 155;
+uint8_t dynamicPayloadsEnabled = 0;
+uint8_t pipe0ReadingAddress[ADDRESS_WIDTH];
 
+static const uint8_t childPipeEnable[] PROGMEM =
+        {
+                ERX_P0, ERX_P1, ERX_P2, ERX_P3, ERX_P4, ERX_P5
+        };
+static const uint8_t childPipe[] PROGMEM =
+        {
+                RX_ADDR_P0, RX_ADDR_P1, RX_ADDR_P2, RX_ADDR_P3, RX_ADDR_P4, RX_ADDR_P5
+        };
+static const uint8_t childPayloadSize[] PROGMEM =
+        {
+                RX_PW_P0, RX_PW_P1, RX_PW_P2, RX_PW_P3, RX_PW_P4, RX_PW_P5
+        };
 
 uint8_t bitRead(uint8_t dataIn, uint8_t x) {
     if (bit_is_set(dataIn, x)) {
@@ -18,6 +36,12 @@ uint8_t bitRead(uint8_t dataIn, uint8_t x) {
     } else {
         return 0;
     }
+}
+
+void delay_us(uint8_t count){
+  while(count--){
+    _delay_us(1);
+  }
 }
 
 
@@ -231,138 +255,267 @@ void slNRF_Init() {
     CSN_HIGH();
     CE_HIGH();
     CE_LOW();
+    //how long RX/TX addres is (now 5 bytes) (addressWidth)
+    slNRF_SetRegister(SETUP_AW, SETUP_AW_5);
 }
 
 void slNRF_SetRXPayload(uint8_t pipe, uint8_t bytes) {
     slUART_WriteString("slNRF_SetRXPayload: \r\n");
-    uint8_t address = pipe + 32 + 16 + 1;// a register write starts at 32, so add on the 1 and 16 to get you to at R17
-    CSN_LOW();
-    dataIn[0] = slSPI_TransferInt(address);
-    CSN_HIGH();
-    CSN_LOW();
-    dataIn[1] = slSPI_TransferInt(bytes);
-    CSN_HIGH();
-    slUART_WriteString("dataIn[0]: ");
-    slUART_LogBinaryNl(dataIn[0]);
-    slUART_WriteString("dataIn[1]: ");
-    slUART_LogBinaryNl(dataIn[1]);
+    uint8_t address = pipe + 16 + 1;//  so add on the 1 and 16 to get you to at R17
+    slNRF_SetRegister(address, bytes);
 }
 
-void slNRF_GetAddress(uint8_t address, uint8_t log) {
-    slUART_WriteString("slNRF_GetAddress: \r\n");
+uint8_t slNRF_GetRegister(uint8_t address, uint8_t log) {
     CSN_LOW();
     dataIn[0] = slSPI_TransferInt(address);
-    CSN_HIGH();
-    CSN_LOW();
     dataIn[1] = slSPI_TransferInt(0x00);
     CSN_HIGH();
-    slUART_WriteString("dataIn[0]: ");
-    slUART_LogBinaryNl(dataIn[0]);
-    slUART_WriteString("dataIn[1]: ");
-    slUART_LogBinaryNl(dataIn[1]);
     if (log == 1) {
         returnData(address);
     }
+    return dataIn[1];
+}
+
+uint8_t slNRF_SetRegister(uint8_t address, uint8_t value) {
+    CSN_LOW();
+    dataIn[0] = slSPI_TransferInt(W_REGISTER | address);
+    dataIn[1] = slSPI_TransferInt(value);
+    CSN_HIGH();
+    return dataIn[1];
+}
+
+void slNRF_SendCommand(uint8_t address, void *value, uint8_t length) {
+    CSN_LOW();
+    dataIn[0] = slSPI_TransferInt(W_REGISTER | RX_ADDR_P0);
+    for (uint8_t i = 0; i < length; i++) {
+        dataIn[(i + 1)] = slSPI_TransferInt(((uint8_t *) value)[i]);
+    }
+    CSN_HIGH();
 }
 
 
-void slNRF_BitWrite(uint8_t address, uint8_t bit_add,
-                    uint8_t val) {//   start bit write   start bit write   start bit write
-    //This routine writes single bits of a register, without affecting the rest of the register
-    //slUART_WriteString("\r\n\r\n\r\n");
-    slNRF_GetAddress(address, 0);//first read out the register
-    if (val == 1)//if we want to write a one to the bit then set the bit in the register we read
+void slNRF_BitSet(uint8_t address, uint8_t bit_add, uint8_t val) {
+    slNRF_GetRegister(address, 0);//first read out the register
+    if (val == 1) {//if we want to write a one to the bit then set the bit in the register we read
         dataIn[1] |= (1 << bit_add);
-    else
+    } else {
         dataIn[1] &= ~(1 << bit_add);
-    slUART_LogBinaryNl(dataIn[1]);
+    }
     CSN_LOW();
-    dataIn[0] = slSPI_TransferInt(32 + address);//a write to a register adds 32
-    CSN_HIGH();
-    CSN_LOW();
+    dataIn[0] = slSPI_TransferInt(W_REGISTER | address);
     dataIn[1] = slSPI_TransferInt(dataIn[1]);//write the modified register
     CSN_HIGH();
-    slUART_WriteString("dataIn[0]: ");
-    slUART_LogBinaryNl(dataIn[0]);
-    slUART_WriteString("dataIn[1]: ");
-    slUART_LogBinaryNl(dataIn[1]);
 }
 
 
-uint8_t getRegister(uint8_t r, uint8_t log) {
-    uint8_t c;
-    //_delay_us(10);
-    CSN_LOW();
-    //_delay_us(10);
-    c = slSPI_TransferInt(R_REGISTER | r);
-    //_delay_us(10);
-    c = slSPI_TransferInt(0);
-    //_delay_us(10);
-    CSN_HIGH();
-    if (log == 1) {
-        slUART_WriteString("\r\n************************\r\n");
-        slUART_WriteString("getRegister: \r\n");
-        slUART_WriteString("register: ");
-        slUART_LogDecNl(r);
-        slUART_WriteString("register2: ");
-        slUART_LogDecNl(R_REGISTER | r);
-        slUART_WriteString("c: ");
-        slUART_LogDecNl(c);
-        dataIn[1] = c;
-        returnData(r);
+void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize) {
+    // slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+    // slNRF_GetRegister(TX_ADDR, 1);
+    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+
+    slNRF_SendCommand(pgm_read_byte(&childPipe[0]), address, addressWidth);
+    slNRF_SendCommand(TX_ADDR, address, addressWidth);
+    slNRF_SetRegister(pgm_read_byte(&childPayloadSize[0]), payloadSize);
+
+    // slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+    // slNRF_GetRegister(TX_ADDR, 1);
+    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+}
+
+void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize) {
+    // slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
+    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+    // slNRF_GetRegister(EN_RXADDR, 1);
+    for (uint8_t i = 0; i < addressWidth; i++) {
+        pipe0ReadingAddress[(i + 1)] = slSPI_TransferInt(((uint8_t *) address)[i]);
     }
-    return c;
+    slNRF_SendCommand(pgm_read_byte(&childPipe[1]), address, addressWidth);
+    slNRF_SetRegister(pgm_read_byte(&childPayloadSize[1]), payloadSize);
+    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) | _BV(pgm_read_byte(&childPipeEnable[1])));
+
+    // slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
+    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+    // slNRF_GetRegister(EN_RXADDR, 1);
 }
 
-void setRegister(uint8_t r, uint8_t v) {
-   // uint8_t c1, c2;
-   // slUART_WriteString("setRegister: \r\n");
-   // slUART_WriteString("register: ");
-   // slUART_LogDecNl(r);
-   // slUART_WriteString("register2: ");
-   // slUART_LogDecNl(W_REGISTER | r);
-   // slUART_WriteString("value: ");
-   // slUART_LogDecNl(v);
-    //_delay_us(10);
-    CSN_LOW();
-    //_delay_us(10);
-    slSPI_TransferInt(W_REGISTER | r);
-    //_delay_us(10);
-    slSPI_TransferInt(v);
-    //_delay_us(10);
-    CSN_HIGH();
-   // slUART_WriteString("c1: ");
-   // slUART_LogDecNl(c1);
-   // slUART_WriteString("c2: ");
-   // slUART_LogDecNl(c2);
+void closeReadingPipe(uint8_t pipe) {
+    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) & ~_BV(pgm_read_byte(&childPipeEnable[pipe])));
 }
 
-void setRx(void) {
-    //slUART_WriteStringNl("\r\nsetRx");
-    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) | 0x01);
-    enable();
-    _delay_us(100);
-    //getRegister(slNRF_CONFIG, 1);
+uint8_t slNRF_SetDataRate(uint8_t dataRateValue) {
+    uint8_t result = 0;
+    uint8_t setup = slNRF_GetRegister(RF_SETUP, 0);
+    setup &= ~(_BV(RF_DR_LOW) | _BV(RF_DR_HIGH));
+    txDelay = 85;
+    if (dataRateValue == RF24_250KBPS) {
+        txDelay = 155;
+    } else {
+        if (dataRateValue == RF24_2MBPS) {
+            setup |= _BV(RF_DR_HIGH);
+            txDelay = 65;
+        }
+    }
+    slNRF_SetRegister(RF_SETUP, setup);
+    if (slNRF_GetRegister(RF_SETUP, 0) == setup) {
+        result = 1;
+    }
+    return result;
 }
 
-void powerUp(){
-    slUART_WriteStringNl("\r\nPowerUP");
-    setRegister(CONFIG, (1<<PWR_UP));
-    _delay_us(130);
-    getRegister(CONFIG, 1);
+void slNRF_SetPALevel(uint8_t paValue) {
+    uint8_t setup = slNRF_GetRegister(RF_SETUP, 0) & 0xf8;//0b11111000;
+    if (paValue > 3) {              // If invalid level, go to max PA
+        paValue = (RF24_PA_MAX << 1) + 1;   // +1 to support the SI24R1 chip extra bit
+    } else {
+        paValue = (paValue << 1) + 1;     // Else set level as requested
+    }
+    slNRF_SetRegister(RF_SETUP, setup |= paValue);  // Write it to the chip
 }
 
-
-void powerDown(){
-    slUART_WriteStringNl("\r\nPowerDown");
-    setRegister(slNRF_CONFIG, getRegister(slNRF_CONFIG, 0) &~0x02);
-    getRegister(slNRF_CONFIG, 1);
+void slNRF_SetChannel(uint8_t channel) {
+    const uint8_t max_channel = 125;
+    //slNRF_GetRegister(RF_CH, 1);
+    slNRF_SetRegister(RF_CH, rf24_min(channel, max_channel));
+    //slNRF_GetRegister(RF_CH, 1);
 }
 
-void enable(){
+void slNRF_EnableDynamicPayloads() {
+    // slNRF_GetRegister(FEATURE, 1);
+    // slNRF_GetRegister(DYNPD, 1);
+    //toggle_features();
+    slNRF_SetRegister(FEATURE, slNRF_GetRegister(FEATURE, 0) | _BV(EN_DPL));
+
+    // Enable dynamic payload on all pipes
+    //
+    // Not sure the use case of only having dynamic payload on certain
+    // pipes, so the library does not support it.
+    slNRF_SetRegister(DYNPD, slNRF_GetRegister(DYNPD, 1) | _BV(DPL_P5) | _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) |
+                             _BV(DPL_P1) | _BV(DPL_P0));
+
+    // slNRF_GetRegister(FEATURE, 1);
+    // slNRF_GetRegister(DYNPD, 1);
+    dynamicPayloadsEnabled = 1;
+
+}
+
+void slNRF_EnableAckPayload() {
+    // enable ack payload and dynamic payload features
+    //toggle_features();
+    slNRF_SetRegister(FEATURE, slNRF_GetRegister(FEATURE, 0) | _BV(EN_ACK_PAY) | _BV(EN_DPL));
+    slNRF_SetRegister(FEATURE, slNRF_GetRegister(FEATURE, 0) | _BV(EN_ACK_PAY) | _BV(EN_DPL));
+
+    // Enable dynamic payload on pipes 0 & 1
+    slNRF_SetRegister(DYNPD, slNRF_GetRegister(DYNPD, 1) | _BV(DPL_P1) | _BV(DPL_P0));
+    dynamicPayloadsEnabled = 1;
+}
+
+void slNRF_SetRetries(uint8_t delay, uint8_t countOfTray) {
+    //slNRF_GetRegister(SETUP_RETR, 1);
+    slNRF_SetRegister(SETUP_RETR, (delay & 0xf) << ARD | (countOfTray & 0xf) << ARC);
+    //slNRF_GetRegister(SETUP_RETR, 1);
+}
+
+void slNRF_AutoAck(uint8_t isOn) {
+
+    if (isOn)
+        slNRF_SetRegister(EN_AA, 0x3f);//0b111111
+    else
+        slNRF_SetRegister(EN_AA, 0);
+}
+
+void slNRF_showDebugData() {
+
+}
+
+void slNRF_PowerUp() {
+    uint8_t cfg = slNRF_GetRegister(CONFIG, 0);
+
+    // if not powered up then power up and wait for the radio to initialize
+    if (!(cfg & _BV(PWR_UP))) {
+        slNRF_SetRegister(CONFIG, cfg | _BV(PWR_UP));
+
+        // For nRF24L01+ to go from power down mode to TX or RX mode it must first pass through stand-by mode.
+        // There must be a delay of Tpd2stby (see Table 16.) after the nRF24L01+ leaves power down mode before
+        // the CEis set high. - Tpd2stby can be up to 5ms per the 1.0 datasheet
+        _delay_ms(5);
+    }
+}
+
+void slNRF_StartListening() {
+    slNRF_SetRegister(CONFIG, slNRF_GetRegister(CONFIG, 0) | _BV(PRIM_RX));
+    slNRF_SetRegister(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
     CE_HIGH();
+    // Restore the pipe0 adddress, if exists
+    if (pipe0ReadingAddress[0] > 0) {
+        slNRF_SendCommand(RX_ADDR_P0, pipe0ReadingAddress, addressWidth);
+    } else {
+        closeReadingPipe(0);
+    }
+
+    // Flush buffers
+    //flush_rx();
+    if (slNRF_GetRegister(FEATURE, 0) & _BV(EN_ACK_PAY)) {
+        slNRF_FlushTX();
+    }
 }
 
-void disable(){
+void slNRF_StopListening() {
     CE_LOW();
+
+    delay_us(txDelay);
+
+    if (slNRF_GetRegister(FEATURE, 0) & _BV(EN_ACK_PAY)) {
+        delay_us(txDelay); //200
+        slNRF_FlushTX();
+    }
+    //flush_rx();
+    slNRF_SetRegister(CONFIG, (slNRF_GetRegister(CONFIG, 0)) & ~_BV(PRIM_RX));
+    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) | _BV(pgm_read_byte(&childPipeEnable[0]))); // Enable RX on pipe0
+}
+
+void slNRF_FlushTX() {
+    CSN_LOW();
+    dataIn[0] = slSPI_TransferInt(FLUSH_TX);
+    CSN_HIGH();
+}
+
+
+uint8_t slNRF_writePayload(const void* buf, uint8_t data_len, const uint8_t writeType)
+{
+  uint8_t status;
+  const uint8_t* current = (const uint8_t*)(buf);
+
+   data_len = rf24_min(data_len, 8);
+   uint8_t blank_len = dynamicPayloadsEnabled ? 0 : 8 - data_len;
+    
+  CSN_LOW();
+  status = slSPI_TransferInt( writeType );
+  while ( data_len-- ) {
+    slSPI_TransferInt(*current++);
+  }
+  while ( blank_len-- ) {
+    slSPI_TransferInt(0);
+  }  
+  CSN_HIGH();
+  return status;
+}
+
+uint8_t slNRF_Sent(const void* buf, uint8_t len) {
+  slNRF_writePayload( buf, len, W_TX_PAYLOAD ) ;
+  CE_HIGH();
+  
+  while( ! (slSPI_TransferInt(0)  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
+  }
+    
+  CE_LOW();
+
+  uint8_t status = slNRF_SetRegister(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+
+  //Max retries exceeded
+  if( status & _BV(MAX_RT)){
+    slNRF_FlushTX(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
+    return 0;
+  }
+  //TX OK 1 or 0
+  return 1;
 }

@@ -15,6 +15,9 @@
 #define CSN_HIGH()    PORTB |= (1 << CSN_PIN)
 #define CSN_LOW()     PORTB &= ~(1 << CSN_PIN)
 
+#define rf24_max(a,b) (a>b?a:b)
+#define rf24_min(a,b) (a<b?a:b)
+
 #define slNRF_CONFIG      0x00
 #define slNRF_EN_AA       0x01
 #define slNRF_RF_CH       0x05
@@ -67,6 +70,9 @@
 
 #define SETUP_AW    0x03
 #define AW          0
+#define SETUP_AW_3  0x01 //3 bytes
+#define SETUP_AW_4  0x10 //4 bytes
+#define SETUP_AW_5  0x11 //5 bytes
 
 #define SETUP_RETR  0x04
 #define ARD         4
@@ -130,16 +136,41 @@
 #define EN_ACK_PAY  1
 #define EN_DYN_ACK  0
 
+#define RF24_1MBPS   0
+#define RF24_2MBPS   1
+#define RF24_250KBPS 2
+
+#define RF24_PA_MIN   0
+#define RF24_PA_LOW   1
+#define RF24_PA_HIGH  2
+#define RF24_PA_MAX   3
+#define RF24_PA_ERROR 4
+
 void slNRF_Init();
 
 void slNRF_SetRXPayload(uint8_t pipe, uint8_t bytes);
 
-void slNRF_GetAddress(uint8_t address, uint8_t log);
+uint8_t slNRF_GetRegister(uint8_t address, uint8_t log);
+uint8_t slNRF_SetRegister(uint8_t address, uint8_t value);
 
 void slNRF_BitWrite(uint8_t address, uint8_t bit_add, uint8_t val);
 
-uint8_t getRegister(uint8_t r, uint8_t log);
-void setRegister(uint8_t r, uint8_t v);
+void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize);
+void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize);
+void closeReadingPipe(uint8_t pipe);
+uint8_t slNRF_SetDataRate(uint8_t dataRateValue);
+void slNRF_SetPALevel(uint8_t  paValue ) ;
+void slNRF_SetChannel(uint8_t channel);
+void slNRF_EnableDynamicPayloads();
+void slNRF_EnableAckPayload();
+void slNRF_SetRetries(uint8_t delay, uint8_t countOfTray);
+void slNRF_AutoAck(uint8_t isOn);
+void slNRF_showDebugData();
+void slNRF_PowerUp();
+void slNRF_FlushTX();
+void slNRF_StartListening();
+void slNRF_StopListening();
+uint8_t slNRF_Sent(const void* buf, uint8_t len);
 void powerUp();
 void powerDown();
 void enable();
