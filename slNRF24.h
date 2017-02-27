@@ -18,6 +18,10 @@
 #define rf24_max(a,b) (a>b?a:b)
 #define rf24_min(a,b) (a<b?a:b)
 
+#define NRF_SETTINGS (1 << MASK_TX_DS) | (1 << MASK_MAX_RT) | (1 << EN_CRC)
+#define NRF_PAYLOAD_SIZE 4
+#define NRF_ADDR_LEN 5
+
 #define slNRF_CONFIG      0x00
 #define slNRF_EN_AA       0x01
 #define slNRF_RF_CH       0x05
@@ -170,7 +174,9 @@ void slNRF_PowerUp();
 void slNRF_FlushTX();
 void slNRF_StartListening();
 void slNRF_StopListening();
-uint8_t slNRF_Sent(const void* buf, uint8_t len);
+uint8_t slNRF_Sent(const uint8_t buf[], uint8_t len);
+void slNRF_Recive(uint8_t* buf, uint8_t len );
+uint8_t slNRF_Available();
 void powerUp();
 void powerDown();
 void enable();

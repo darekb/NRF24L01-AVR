@@ -16,6 +16,7 @@ uint8_t addressWidth = ADDRESS_WIDTH;
 uint8_t txDelay = 155;
 uint8_t dynamicPayloadsEnabled = 0;
 uint8_t pipe0ReadingAddress[ADDRESS_WIDTH];
+uint8_t payloadWidth = 4;
 
 static const uint8_t childPipeEnable[] PROGMEM =
         {
@@ -480,18 +481,18 @@ void slNRF_FlushTX() {
 }
 
 
-uint8_t slNRF_writePayload(const void* buf, uint8_t data_len, const uint8_t writeType)
+uint8_t slNRF_WritePayload(const uint8_t buf[], uint8_t data_len, const uint8_t writeType)
 {
   uint8_t status;
-  const uint8_t* current = (const uint8_t*)(buf);
 
-   data_len = rf24_min(data_len, 8);
-   uint8_t blank_len = dynamicPayloadsEnabled ? 0 : 8 - data_len;
+   data_len = rf24_min(data_len, payloadWidth);
+   uint8_t blank_len = dynamicPayloadsEnabled ? 0 : payloadWidth - data_len;
     
   CSN_LOW();
   status = slSPI_TransferInt( writeType );
-  while ( data_len-- ) {
-    slSPI_TransferInt(*current++);
+  for(uint8_t i = 0; i < data_len; i++){
+    slUART_LogDecNl(buf[i]);
+    slSPI_TransferInt(buf[i]);
   }
   while ( blank_len-- ) {
     slSPI_TransferInt(0);
@@ -500,8 +501,9 @@ uint8_t slNRF_writePayload(const void* buf, uint8_t data_len, const uint8_t writ
   return status;
 }
 
-uint8_t slNRF_Sent(const void* buf, uint8_t len) {
-  slNRF_writePayload( buf, len, W_TX_PAYLOAD ) ;
+uint8_t slNRF_Sent(const uint8_t buf[], uint8_t len) {
+  CE_LOW();
+  slNRF_WritePayload( buf, len, W_TX_PAYLOAD ) ;
   CE_HIGH();
   
   while( ! (slSPI_TransferInt(0)  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
@@ -509,13 +511,63 @@ uint8_t slNRF_Sent(const void* buf, uint8_t len) {
     
   CE_LOW();
 
-  uint8_t status = slNRF_SetRegister(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+  uint8_t status = slNRF_SetRegister(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   //Max retries exceeded
   if( status & _BV(MAX_RT)){
     slNRF_FlushTX(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
     return 0;
   }
+  CSN_LOW();
+  slSPI_TransferInt( FLUSH_TX );
+  CSN_HIGH();
   //TX OK 1 or 0
   return 1;
+  // Make sure the nrf isn't already transmitting 
+}
+
+uint8_t slNRF_ReadPayload(uint8_t* buf, uint8_t data_len)
+{
+  uint8_t status;
+
+  // if(data_len > 4) data_len = 4;
+  // uint8_t blank_len = dynamicPayloadsEnabled ? 0 : 4 - data_len;
+  uint8_t t;
+  CSN_LOW();
+  status = slSPI_TransferInt( R_RX_PAYLOAD );
+  for(uint8_t i = 0; i < data_len; i++){
+    t = slSPI_TransferInt(0xFF);
+    slUART_LogDecNl(t);
+    buf[i] = t;
+  }
+  // while ( blank_len-- ) {
+  //   slSPI_TransferInt(0xff);
+  // }
+  CSN_HIGH();
+
+  return status;
+}
+
+void slNRF_Recive(uint8_t* buf, uint8_t len ){
+  slNRF_ReadPayload( buf, len );
+
+  //Clear the two possible interrupt flags with one command
+  slNRF_SetRegister(STATUS,_BV(RX_DR) | _BV(MAX_RT) | _BV(TX_DS) );
+
+  CSN_LOW();
+  slSPI_TransferInt( FLUSH_RX );
+  CSN_HIGH();
+}
+
+uint8_t slNRF_Available(){
+  if (!( slNRF_GetRegister(FIFO_STATUS, 0) & _BV(RX_EMPTY) )){
+
+    // // If the caller wants the pipe number, include that
+    // if ( pipe_num ){
+    //   uint8_t status = slSPI_TransferInt(0);
+    //   *pipe_num = ( status >> RX_P_NO ) & 0x7;//0b111;
+    // }
+    return 1;
+  }
+  return 0;
 }
