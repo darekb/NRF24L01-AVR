@@ -5,6 +5,10 @@
 #ifndef CMAKE_AVR_SLNRF24_H
 #define CMAKE_AVR_SLNRF24_H
 
+/* Bit Mnemonics */
+
+#define RX_P_NO     1
+#define TX_FULL     0
 
 #define CE_PIN        PB1
 #define CE_OUTPUT()   DDRB |= (1 << CE_PIN)
@@ -140,15 +144,46 @@
 #define EN_ACK_PAY  1
 #define EN_DYN_ACK  0
 
-#define RF24_1MBPS   0
-#define RF24_2MBPS   1
-#define RF24_250KBPS 2
+//#define RF24_1MBPS   0
+//#define RF24_2MBPS   1
+//#define RF24_250KBPS 2
 
-#define RF24_PA_MIN   0
-#define RF24_PA_LOW   1
-#define RF24_PA_HIGH  2
-#define RF24_PA_MAX   3
-#define RF24_PA_ERROR 4
+//#define RF24_PA_MIN   0
+//#define RF24_PA_LOW   1
+//#define RF24_PA_HIGH  2
+//#define RF24_PA_MAX   3
+//#define RF24_PA_ERROR 4
+
+#define PRIPSTR "%S"
+
+
+/* P model bit Mnemonics */
+#define RF_DR_LOW   5
+#define RF_DR_HIGH  3
+#define RF_PWR_LOW  1
+#define RF_PWR_HIGH 2
+
+/**
+ * Power Amplifier level.
+ *
+ * For use with setPALevel()
+ */
+typedef enum { RF24_PA_MIN = 0,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX, RF24_PA_ERROR } rf24_pa_dbm_e ;
+
+/**
+ * Data rate.  How fast data moves through the air.
+ *
+ * For use with setDataRate()
+ */
+typedef enum { RF24_1MBPS = 0, RF24_2MBPS, RF24_250KBPS } rf24_datarate_e;
+
+/**
+ * CRC Length.  How big (if any) of a CRC is included.
+ *
+ * For use with setCRCLength()
+ */
+typedef enum { RF24_CRC_DISABLED = 0, RF24_CRC_8, RF24_CRC_16 } rf24_crclength_e;
+
 
 void slNRF_Init();
 
