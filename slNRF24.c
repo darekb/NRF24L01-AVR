@@ -11,14 +11,16 @@
 #include "slSPI.h"
 #include "slUart.h"
 
+
+#define showDebugDataNRF24 0
+
 #define ADDRESS_WIDTH 5
 uint8_t dataIn[10];
 uint8_t addressWidth = ADDRESS_WIDTH;
 uint8_t txDelay = 155;
 uint8_t dynamicPayloadsEnabled = 0;
 uint8_t pipe0ReadingAddress[ADDRESS_WIDTH];
-uint8_t payloadWidth = 8;
-uint8_t p_variant = 0;
+uint8_t payloadWidth = 9;
 
 static const uint8_t childPipeEnable[] PROGMEM =
         {
@@ -33,6 +35,13 @@ static const uint8_t childPayloadSize[] PROGMEM =
                 RX_PW_P0, RX_PW_P1, RX_PW_P2, RX_PW_P3, RX_PW_P4, RX_PW_P5
         };
 
+
+void delay_us(uint8_t count) {
+    while (count--) {
+        _delay_us(1);
+    }
+}
+#if showDebugDataNRF24
 uint8_t bitRead(uint8_t dataIn, uint8_t x) {
     if (bit_is_set(dataIn, x)) {
         return 1;
@@ -40,15 +49,10 @@ uint8_t bitRead(uint8_t dataIn, uint8_t x) {
         return 0;
     }
 }
-
-void delay_us(uint8_t count) {
-    while (count--) {
-        _delay_us(1);
-    }
-}
-
+#endif
 //
 void returnData(uint8_t address) {
+#if showDebugDataNRF24
     switch (address) {
         case 0:
             slUART_WriteString(" CONFIG REGISTER =");
@@ -248,6 +252,7 @@ void returnData(uint8_t address) {
             slUART_LogBinaryNl(bitRead(dataIn[1], 6));
             break;//23
     }//switch
+#endif
 }
 
 void slNRF_Init() {
@@ -260,12 +265,6 @@ void slNRF_Init() {
     CE_LOW();
     //how long RX/TX addres is (now 5 bytes) (addressWidth)
     slNRF_SetRegister(SETUP_AW, SETUP_AW_5);
-}
-
-void slNRF_SetRXPayload(uint8_t pipe, uint8_t bytes) {
-    slUART_WriteString("slNRF_SetRXPayload: \r\n");
-    uint8_t address = pipe + 16 + 1;//  so add on the 1 and 16 to get you to at R17
-    slNRF_SetRegister(address, bytes);
 }
 
 uint8_t slNRF_GetRegister(uint8_t address, uint8_t log) {
@@ -292,9 +291,7 @@ uint8_t slNRF_ReadRegister(uint8_t reg, uint8_t* buf, uint8_t len){
     CSN_LOW();
     status = slSPI_TransferInt( R_REGISTER | reg );
     while ( len-- ){
-        b= slSPI_TransferInt(0xff);
-        //slUART_LogHexNl(b);
-        *buf++ = b;
+        *buf++ = slSPI_TransferInt(0xff);
     }
     CSN_HIGH();
 
@@ -310,49 +307,40 @@ void slNRF_SendCommand(uint8_t address, void *value, uint8_t length) {
     CSN_HIGH();
 }
 
-
-void slNRF_BitSet(uint8_t address, uint8_t bit_add, uint8_t val) {
-    slNRF_GetRegister(address, 0);//first read out the register
-    if (val == 1) {//if we want to write a one to the bit then set the bit in the register we read
-        dataIn[1] |= (1 << bit_add);
-    } else {
-        dataIn[1] &= ~(1 << bit_add);
-    }
-    CSN_LOW();
-    dataIn[0] = slSPI_TransferInt(W_REGISTER | address);
-    dataIn[1] = slSPI_TransferInt(dataIn[1]);//write the modified register
-    CSN_HIGH();
-}
-
-
 void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize) {
-//     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
-//     slNRF_GetRegister(TX_ADDR, 1);
-//     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+#if showDebugDataNRF24
+     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+     slNRF_GetRegister(TX_ADDR, 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+#endif
 
     slNRF_SendCommand(pgm_read_byte(&childPipe[0]), address, addressWidth);
     slNRF_SendCommand(TX_ADDR, address, addressWidth);
     slNRF_SetRegister(pgm_read_byte(&childPayloadSize[0]), payloadSize);
-
-//     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
-//     slNRF_GetRegister(TX_ADDR, 1);
-//     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+#if showDebugDataNRF24
+     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+     slNRF_GetRegister(TX_ADDR, 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+#endif
 }
 
 void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize) {
-    // slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
-    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
-    // slNRF_GetRegister(EN_RXADDR, 1);
+#if showDebugDataNRF24
+     slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+     slNRF_GetRegister(EN_RXADDR, 1);
+#endif
     for (uint8_t i = 0; i < addressWidth; i++) {
         pipe0ReadingAddress[(i + 1)] = slSPI_TransferInt(((uint8_t *) address)[i]);
     }
     slNRF_SendCommand(pgm_read_byte(&childPipe[1]), address, addressWidth);
     slNRF_SetRegister(pgm_read_byte(&childPayloadSize[1]), payloadSize);
     slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) | _BV(pgm_read_byte(&childPipeEnable[1])));
-
-    // slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
-    // slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
-    // slNRF_GetRegister(EN_RXADDR, 1);
+#if showDebugDataNRF24
+     slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+     slNRF_GetRegister(EN_RXADDR, 1);
+#endif
 }
 
 void closeReadingPipe(uint8_t pipe) {
@@ -391,15 +379,21 @@ void slNRF_SetPALevel(uint8_t paValue) {
 
 void slNRF_SetChannel(uint8_t channel) {
     const uint8_t max_channel = 125;
-    //slNRF_GetRegister(RF_CH, 1);
+#if showDebugDataNRF24
+    slNRF_GetRegister(RF_CH, 1);
+#endif
     slNRF_SetRegister(RF_CH, rf24_min(channel, max_channel));
-    //slNRF_GetRegister(RF_CH, 1);
+#if showDebugDataNRF24
+    slNRF_GetRegister(RF_CH, 1);
+#endif
 }
 
 void slNRF_EnableDynamicPayloads() {
-    // slNRF_GetRegister(FEATURE, 1);
-    // slNRF_GetRegister(DYNPD, 1);
-    //toggle_features();
+#if showDebugDataNRF24
+     slNRF_GetRegister(FEATURE, 1);
+     slNRF_GetRegister(DYNPD, 1);
+    toggle_features();
+#endif
     slNRF_SetRegister(FEATURE, slNRF_GetRegister(FEATURE, 0) | _BV(EN_DPL));
 
     // Enable dynamic payload on all pipes
@@ -408,9 +402,10 @@ void slNRF_EnableDynamicPayloads() {
     // pipes, so the library does not support it.
     slNRF_SetRegister(DYNPD, slNRF_GetRegister(DYNPD, 1) | _BV(DPL_P5) | _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) |
                              _BV(DPL_P1) | _BV(DPL_P0));
-
+#if showDebugDataNRF24
     // slNRF_GetRegister(FEATURE, 1);
     // slNRF_GetRegister(DYNPD, 1);
+#endif
     dynamicPayloadsEnabled = 1;
 
 }
@@ -427,13 +422,16 @@ void slNRF_EnableAckPayload() {
 }
 
 void slNRF_SetRetries(uint8_t delay, uint8_t countOfTray) {
-    //slNRF_GetRegister(SETUP_RETR, 1);
+#if showDebugDataNRF24
+    slNRF_GetRegister(SETUP_RETR, 1);
+#endif
     slNRF_SetRegister(SETUP_RETR, (delay & 0xf) << ARD | (countOfTray & 0xf) << ARC);
+#if showDebugDataNRF24
     //slNRF_GetRegister(SETUP_RETR, 1);
+#endif
 }
 
 void slNRF_AutoAck(uint8_t isOn) {
-
     if (isOn)
         slNRF_SetRegister(EN_AA, 0x3f);//0b111111
     else

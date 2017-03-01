@@ -6,27 +6,35 @@
 #include "slBME180Measure.h"
 #include "slUart.h"
 
-void fillBuferFromMEASURE (const struct MEASURE structure, uint8_t *buffer) {
+void fillBuferFromMEASURE(const struct MEASURE structure, uint8_t *buffer) {
     memcpy(buffer, &structure, sizeof(struct MEASURE));
 }
-struct MEASURE returnMEASUREFromBuffer (uint8_t *buffer) {
-    struct MEASURE  tmp;
-    memcpy(&tmp, buffer, 8*sizeof(uint8_t));
+
+struct MEASURE returnMEASUREFromBuffer(uint8_t *buffer) {
+    struct MEASURE tmp;
+    memcpy(&tmp, buffer, 9 * sizeof(uint8_t));
     return tmp;
 }
-int16_t calculateTemperature(float temperature){
-  return (int16_t)((float)temperature * (int16_t)100);
-}
-uint16_t calculateHumidity(float humidity){
-  return (uint16_t)((float)humidity * (uint16_t)100);
-}
-int16_t calculatePressure(float pressure){
-  return (int16_t)((float)pressure - (float)100000);
+
+int16_t calculateTemperature(float temperature) {
+    return (int16_t) ((float) temperature * (int16_t) 100);
 }
 
-void testBME180Measure(void){
-    struct MEASURE  BME180measure = {856,6818,-1235,33,11};
-    struct MEASURE  t2 = {0,0,0,0,11};
+uint16_t calculateHumidity(float humidity) {
+    return (uint16_t) ((float) humidity * (uint16_t) 100);
+}
+
+int16_t calculatePressure(float pressure) {
+    return (int16_t) ((float) pressure - (float) 100000);
+}
+
+int16_t calculateVoltage(float voltage) {
+    return (uint16_t) ((float) voltage * (uint16_t) 100);
+}
+
+void testBME180Measure(void) {
+    struct MEASURE BME180measure = {856, 6818, -1235, 33, 11};
+    struct MEASURE t2 = {0, 0, 0, 0, 11};
     uint8_t buffer[8];
     fillBuferFromMEASURE(BME180measure, buffer);
     slUART_WriteString("\r\n***************************\r\n");
