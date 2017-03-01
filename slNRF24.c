@@ -326,17 +326,17 @@ void slNRF_BitSet(uint8_t address, uint8_t bit_add, uint8_t val) {
 
 
 void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize) {
-     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
-     slNRF_GetRegister(TX_ADDR, 1);
-     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+//     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+//     slNRF_GetRegister(TX_ADDR, 1);
+//     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
 
     slNRF_SendCommand(pgm_read_byte(&childPipe[0]), address, addressWidth);
     slNRF_SendCommand(TX_ADDR, address, addressWidth);
     slNRF_SetRegister(pgm_read_byte(&childPayloadSize[0]), payloadSize);
 
-     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
-     slNRF_GetRegister(TX_ADDR, 1);
-     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
+//     slNRF_GetRegister(pgm_read_byte(&childPipe[0]), 1);
+//     slNRF_GetRegister(TX_ADDR, 1);
+//     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[0]), 1);
 }
 
 void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize) {
@@ -643,7 +643,7 @@ uint8_t slNRF_WritePayload(const uint8_t buf[], uint8_t data_len, const uint8_t 
     CSN_LOW();
     status = slSPI_TransferInt(writeType);
     for (uint8_t i = 0; i < data_len; i++) {
-        slUART_LogDecNl(buf[i]);
+        //slUART_LogDecNl(buf[i]);
         slSPI_TransferInt(buf[i]);
     }
     while (blank_len--) {
@@ -683,13 +683,10 @@ uint8_t slNRF_ReadPayload(uint8_t *buf, uint8_t data_len) {
 
     // if(data_len > 4) data_len = 4;
     // uint8_t blank_len = dynamicPayloadsEnabled ? 0 : 4 - data_len;
-    uint8_t t;
     CSN_LOW();
     status = slSPI_TransferInt(R_RX_PAYLOAD);
     for (uint8_t i = 0; i < data_len; i++) {
-        t = slSPI_TransferInt(0xFF);
-        slUART_LogDecNl(t);
-        buf[i] = t;
+        buf[i] = slSPI_TransferInt(0xFF);
     }
     // while ( blank_len-- ) {
     //   slSPI_TransferInt(0xff);
