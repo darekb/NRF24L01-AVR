@@ -13,7 +13,7 @@ set(AVR_H_FUSE 0xD9)
 
 set(AVR_UPLOADTOOL avrdude)
 set(AVR_PROGRAMMER arduino)
-set(AVR_UPLOADTOOL_PORT /dev/ttyUSB1)
+set(AVR_UPLOADTOOL_PORT /dev/ttyUSB0)
 #duomleanove
 #set(AVR_UPLOADTOOL_OPTIONS -b19200)
 #nano
