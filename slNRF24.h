@@ -185,14 +185,17 @@ typedef enum { RF24_1MBPS = 0, RF24_2MBPS, RF24_250KBPS } rf24_datarate_e;
 typedef enum { RF24_CRC_DISABLED = 0, RF24_CRC_8, RF24_CRC_16 } rf24_crclength_e;
 
 
+#define ADDRESS_WIDTH 5//
+
 void slNRF_Init();
 
 void slNRF_SetRXPayload(uint8_t pipe, uint8_t bytes);
 
 uint8_t slNRF_GetRegister(uint8_t address, uint8_t log);
 uint8_t slNRF_SetRegister(uint8_t address, uint8_t value);
-
+#if showDebugDataNRF24
 void slNRF_BitWrite(uint8_t address, uint8_t bit_add, uint8_t val);
+#endif
 
 void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize);
 void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize);
@@ -204,7 +207,9 @@ void slNRF_EnableDynamicPayloads();
 void slNRF_EnableAckPayload();
 void slNRF_SetRetries(uint8_t delay, uint8_t countOfTray);
 void slNRF_AutoAck(uint8_t isOn);
+#if showDebugDataNRF24
 void slNRF_showDebugData();
+#endif
 void slNRF_PowerUp();
 void slNRF_FlushTX();
 void slNRF_StartListening();
@@ -212,10 +217,5 @@ void slNRF_StopListening();
 uint8_t slNRF_Sent(const uint8_t buf[], uint8_t len);
 void slNRF_Recive(uint8_t* buf, uint8_t len );
 uint8_t slNRF_Available();
-void powerUp();
-void powerDown();
-void enable();
-void disable();
-void setRx(void);
 
 #endif //CMAKE_AVR_SLNRF24_H

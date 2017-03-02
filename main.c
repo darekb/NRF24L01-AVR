@@ -14,7 +14,6 @@
 
 #include "main.h"
 #include "slUart.h"
-#include "slSPI.h"
 #include "slNRF24.h"
 #include "slBME180Measure.h"
 
@@ -31,11 +30,27 @@ void clearData() {
         data[i] = 0;
     };
 }
+void transmit();
+void recivie();
+
+void test(void *test, uint8_t length){
+    uint8_t *tmp;
+    tmp = test;
+    for(uint8_t i = 0; i < length; i++){
+        slUART_LogHexNl((uint8_t)*tmp++);
+    }
+}
 
 int main(void) {
     slUART_SimpleTransmitInit();
+    test(&BME180measure, sizeof(BME180measure));
+
     slNRF_Init();
-    if(role == 0) {
+    if (role == 1) {
+        slNRF_OpenWritingPipe(pipe2, 9);
+        slNRF_OpenReadingPipe(pipe1, 9);
+    }
+    if (role == 0) {
         t = 23.45;
         BME180measure.temperature = calculateTemperature(t);
         t = 71.567;
@@ -44,12 +59,6 @@ int main(void) {
         BME180measure.pressure = calculatePressure(t);
         t = 3.23;
         BME180measure.voltage = calculateVoltage(t);
-    }
-    if (role == 1) {
-        slNRF_OpenWritingPipe(pipe2, 9);
-        slNRF_OpenReadingPipe(pipe1, 9);
-    }
-    if (role == 0) {
         slNRF_OpenWritingPipe(pipe1, 9);
         slNRF_OpenReadingPipe(pipe2, 9);
     }
@@ -68,36 +77,41 @@ int main(void) {
     }
     while (1) {
         if (role == 0) {
-            BME180measure.temperature = BME180measure.temperature + 1;
-            slNRF_StopListening();
-            if (!slNRF_Sent(data, sizeof(data))) {
-                slUART_WriteStringNl("Fail...");
-            } else {
-                fillBuferFromMEASURE(BME180measure, data);
-                slUART_LogDecNl(BME180measure.temperature);
-                slUART_WriteStringNl("Send ok");
-            }
-            slNRF_StartListening();
+            transmit();
             _delay_ms(1000);
         }
         if (role == 1) {
-            if (slNRF_Available()) {
-                slUART_LogDec(i);
-                slUART_WriteStringNl(". recive: ");
-                clearData();
-                slNRF_Recive(data, sizeof(data));
-                BME180measure = returnMEASUREFromBuffer(data);
-                //for(uint8_t i =0; i < 8; i++){
-                slUART_LogDecNl(BME180measure.temperature);
-                slUART_LogDecNl(BME180measure.humidity);
-                slUART_LogDecNl(BME180measure.pressure);
-                slUART_LogDecNl(BME180measure.voltage);
-                slUART_LogDecNl(BME180measure.sensorId);
-                //};
-                i++;
-            }
+            recivie();
+            i++;
         }
 
     }
     return 0;
+}
+
+void transmit(){
+    BME180measure.temperature = BME180measure.temperature + 1;
+    slNRF_StopListening();
+    if (!slNRF_Sent(data, sizeof(data))) {
+        slUART_WriteStringNl("Fail...");
+    } else {
+        fillBuferFromMEASURE(BME180measure, data);
+        slUART_LogDecNl(BME180measure.temperature);
+        slUART_WriteStringNl("Send ok");
+    }
+    slNRF_StartListening();
+}
+void recivie(){
+    if (slNRF_Available()) {
+        slUART_LogDec(i);
+        slUART_WriteStringNl(". recive: ");
+        clearData();
+        slNRF_Recive(data, sizeof(data));
+        BME180measure = returnMEASUREFromBuffer(data);
+        slUART_LogDecNl(BME180measure.temperature);
+        slUART_LogDecNl(BME180measure.humidity);
+        slUART_LogDecNl(BME180measure.pressure);
+        slUART_LogDecNl(BME180measure.voltage);
+        slUART_LogDecNl(BME180measure.sensorId);
+    }
 }

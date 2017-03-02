@@ -2,19 +2,25 @@
 // Created by dariusz on 20.02.17.
 //
 
+#define showDebugDataNRF24 0
+
+
 #include <avr/io.h>
 #include <util/delay.h>
+#if showDebugDataNRF24
 #include <stdlib.h>
 #include <stdio.h>
+#endif
 #include <avr/pgmspace.h>
 #include "slNRF24.h"
 #include "slSPI.h"
+
+#if showDebugDataNRF24
 #include "slUart.h"
+#endif
 
 
-#define showDebugDataNRF24 0
 
-#define ADDRESS_WIDTH 5
 uint8_t dataIn[10];
 uint8_t addressWidth = ADDRESS_WIDTH;
 uint8_t txDelay = 155;
@@ -256,7 +262,10 @@ void returnData(uint8_t address) {
 }
 
 void slNRF_Init() {
+
+#if showDebugDataNRF24
     slUART_WriteString("after init SPI\r\n\r\n");
+#endif
     slSPI_Init();
     CE_OUTPUT();
     CSN_OUTPUT();
@@ -287,7 +296,6 @@ uint8_t slNRF_SetRegister(uint8_t address, uint8_t value) {
 }
 uint8_t slNRF_ReadRegister(uint8_t reg, uint8_t* buf, uint8_t len){
     uint8_t status;
-    uint8_t b;
     CSN_LOW();
     status = slSPI_TransferInt( R_REGISTER | reg );
     while ( len-- ){
@@ -437,6 +445,7 @@ void slNRF_AutoAck(uint8_t isOn) {
     else
         slNRF_SetRegister(EN_AA, 0);
 }
+#if showDebugDataNRF24
 void print_address_register(const char* name, uint8_t reg, uint8_t qty)
 {
     char buf[150];
@@ -576,7 +585,7 @@ void slNRF_showDebugData() {
 //    slUART_WriteString(buf);
 
 }
-
+#endif
 
 void slNRF_PowerUp() {
     uint8_t cfg = slNRF_GetRegister(CONFIG, 0);
