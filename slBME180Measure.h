@@ -20,7 +20,7 @@ struct MEASURE returnMEASUREFromBuffer (uint8_t *buffer);
 int16_t calculateTemperature(float temperature);
 uint16_t calculateHumidity(float humidity);
 int16_t calculatePressure(float pressure);
-int16_t calculateVoltage(float voltage);
+uint16_t calculateVoltage(float voltage);
 void testBME180Measure(void);
 
 #endif //CMAKE_AVR_SLBME180MEASURE_H

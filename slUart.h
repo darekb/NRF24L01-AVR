@@ -51,6 +51,7 @@ void slUART_LogBinary(uint16_t dataIn);
 void slUART_LogBinaryNl(uint16_t dataIn);
 
 void slUART_LogDec(uint16_t dataIn);
+void slUART_LogDecWithSign(int16_t dataIn);
 void slUART_LogDecNl(uint16_t dataIn);
 
 void slUART_LogHex(uint16_t dataIn);

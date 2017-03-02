@@ -28,7 +28,7 @@ int16_t calculatePressure(float pressure) {
     return (int16_t) ((float) pressure - (float) 100000);
 }
 
-int16_t calculateVoltage(float voltage) {
+uint16_t calculateVoltage(float voltage) {
     return (uint16_t) ((float) voltage * (uint16_t) 100);
 }
 

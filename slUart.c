@@ -82,6 +82,11 @@ void slUART_LogDec(uint16_t dataIn) {
     itoa(dataIn, buff, 10);
     slUART_WriteString(buff);
 }
+void slUART_LogDecWithSign(int16_t dataIn) {
+    char buff[30];
+    itoa(dataIn, buff, 10);
+    slUART_WriteString(buff);
+}
 void slUART_LogDecNl(uint16_t dataIn) {
     slUART_LogDec(dataIn);
     slUART_WriteString("\r\n");

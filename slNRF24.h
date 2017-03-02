@@ -198,7 +198,7 @@ void slNRF_BitWrite(uint8_t address, uint8_t bit_add, uint8_t val);
 #endif
 
 void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize);
-void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize);
+void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize, uint8_t pipeNr);
 void closeReadingPipe(uint8_t pipe);
 uint8_t slNRF_SetDataRate(uint8_t dataRateValue);
 void slNRF_SetPALevel(uint8_t  paValue ) ;

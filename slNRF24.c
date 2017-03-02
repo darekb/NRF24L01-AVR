@@ -332,27 +332,27 @@ void slNRF_OpenWritingPipe(uint8_t address[], uint8_t payloadSize) {
 #endif
 }
 
-void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize) {
+void slNRF_OpenReadingPipe(uint8_t address[], uint8_t payloadSize, uint8_t pipeNr) {
 #if showDebugDataNRF24
-     slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
-     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPipe[pipeNr]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[pipeNr]), 1);
      slNRF_GetRegister(EN_RXADDR, 1);
 #endif
     for (uint8_t i = 0; i < addressWidth; i++) {
         pipe0ReadingAddress[(i + 1)] = slSPI_TransferInt(((uint8_t *) address)[i]);
     }
-    slNRF_SendCommand(pgm_read_byte(&childPipe[1]), address, addressWidth);
-    slNRF_SetRegister(pgm_read_byte(&childPayloadSize[1]), payloadSize);
-    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) | _BV(pgm_read_byte(&childPipeEnable[1])));
+    slNRF_SendCommand(pgm_read_byte(&childPipe[pipeNr]), address, addressWidth);
+    slNRF_SetRegister(pgm_read_byte(&childPayloadSize[pipeNr]), payloadSize);
+    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) | _BV(pgm_read_byte(&childPipeEnable[pipeNr])));
 #if showDebugDataNRF24
-     slNRF_GetRegister(pgm_read_byte(&childPipe[1]), 1);
-     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[1]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPipe[pipeNr]), 1);
+     slNRF_GetRegister(pgm_read_byte(&childPayloadSize[pipeNr]), 1);
      slNRF_GetRegister(EN_RXADDR, 1);
 #endif
 }
 
-void closeReadingPipe(uint8_t pipe) {
-    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) & ~_BV(pgm_read_byte(&childPipeEnable[pipe])));
+void closeReadingPipe(uint8_t pipeNr) {
+    slNRF_SetRegister(EN_RXADDR, slNRF_GetRegister(EN_RXADDR, 0) & ~_BV(pgm_read_byte(&childPipeEnable[pipeNr])));
 }
 
 uint8_t slNRF_SetDataRate(uint8_t dataRateValue) {
